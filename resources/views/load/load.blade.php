@@ -7,4 +7,7 @@
         {{ Form::file('files[]', ['multiple' => true]) }}
         {{ Form::submit('Загрузить') }}
     {{ Form::close() }}
+    @if($errors->any())
+        <p style="color: red;">{{ $errors->first() }}</p>
+    @endif
 @endsection

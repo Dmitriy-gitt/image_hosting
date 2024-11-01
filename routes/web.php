@@ -27,29 +27,20 @@ Route::controller(LoginRegisterControllers::class)->group(function() {
     Route::post('/logout', 'logout')->name('logout');
 });
 
-Route::get('/start', [FileController::class, 'index'])
-    ->middleware('auth')
-    ->name('start');
+Route::group(['prefix' => 'host', 'middleware' => ['auth']], function() {
 
-Route::get('/viewing', [ViewFileController::class, 'index'])
-    ->middleware('auth')
-    ->name('viewing.file');
+    Route::get('start', [FileController::class, 'index'])->name('start');
 
-Route::get('original/{filename}', [ViewFileController::class, 'GetOriginalPhoto'])
-    ->middleware('auth')
-    ->name('view.original');
+    Route::get('viewing', [ViewFileController::class, 'index'])->name('viewing.file');
 
-Route::get('zip/{id}', [ZipFileController::class, 'download'])
-    ->name('zip.file');
+    Route::get('original/{filename}', [ViewFileController::class, 'GetOriginalPhoto'])->name('view.original');
 
-Route::post('/dowfile/post', [FileController::class, 'download'])
-    ->name('download.file');
+    Route::get('zip/{id}', [ZipFileController::class, 'download'])->name('zip.file');
 
-Route::get('get/{id}', [GetFileController::class, 'getById']);
+    Route::post('/dowfile/post', [FileController::class, 'download'])->name('download.file');
 
-Route::get('get', [GetFileController::class, 'findAll']);
-
-Route::delete('/delete/{id}', [FileController::class, 'destroy'])->name('file.delete');
+    Route::delete('/delete/{id}', [FileController::class, 'destroy'])->name('file.delete');
+});
 
 
 

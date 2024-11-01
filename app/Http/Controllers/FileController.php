@@ -2,55 +2,47 @@
 
 namespace App\Http\Controllers;
 
+use App\Contracts\File\IFileService;
+use App\Dto\File\FileDownloadDto;
+use App\Services\File\FileService;
+use App\Validate\File\FileRequest;
+use App\Validate\File\FileUploadRequest;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use App\Models\File;
 
-class Filecontroller extends Controller
+class FileController extends Controller
 {
-    
+    public function __construct(
+        protected IFileService  $fileService
+    ){
+    }
+
     public function index()
     {
         return view('load.load');
     }
 
-    public function download(Request $request)
+    public function download(FileRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'files' => 'max:5', // Ограничиваем количество файлов до 5
-        ]);
+        $files = $request->file('files');
 
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+        if (!$files) {
+            return redirect()->back()->withErrors(['files' => 'Файлы не были получены.']);
         }
 
-        if ($request->isMethod('post')) {
-            if ($request->hasFile('files')) {
-                $files = $request->file('files');
-                foreach ($files as $file) {
-                    $extension = $file->getClientOriginalExtension();
-                    $filename = 'file' . time() . '_' . str_replace(['.', '-'], '', uniqid()) . '.' . strtolower($extension);
-                    $filename = preg_replace('/[^a-z.]/', '', $filename);
-                    $path = $file->move(public_path() . '/images', $filename);
+        $filename = $this->fileService->download(files: $files);
 
-                    $fileModel = new File;
-                    $fileModel->name = $filename;
-                    $fileModel->save();
-                }
+        return view('load.answer', compact('filename'));
 
-                return view('load.answer', compact('filename'));
-            }
-        }
-
-        return view('load.answer');
     }
 
-    public function destroy($id)
+    public function destroy(int|string $id)
     {
-        $file = File::findOrFail($id);
-        $file->delete();
+        $this->fileService->destroy($id);
 
         return redirect()->back()->with('success', 'Файл успешно удален.');
     }
